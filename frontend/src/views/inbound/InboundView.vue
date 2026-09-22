@@ -1,0 +1,47 @@
+<template>
+  <div class="page-container">
+    <div class="page-header"><h1 class="page-title">入库管理</h1><p class="page-subtitle">管理采购、生产和退货入库业务</p></div>
+    <div class="metrics-grid"><div v-for="metric in metrics" :key="metric.label" class="metric-card"><div class="metric-label">{{metric.label}}</div><div class="metric-value" :style="{color:metric.color}">{{metric.value}}</div></div></div>
+    <div class="card">
+      <el-tabs v-model="activeTab"><el-tab-pane label="全部" name="all"/><el-tab-pane label="待收货" name="CREATED"/><el-tab-pane label="待上架" name="RECEIVED"/><el-tab-pane label="已完成" name="PUTAWAY"/><el-tab-pane label="已取消" name="CANCELLED"/></el-tabs>
+      <div class="search-bar"><el-input v-model="searchKeyword" placeholder="搜索入库单号" prefix-icon="Search" clearable @keyup.enter="loadData"/><el-button type="primary" @click="loadData">查询</el-button><el-button type="success" @click="openCreate"><el-icon><Plus/></el-icon> 新建入库单</el-button></div>
+      <el-table :data="tableData" stripe border v-loading="loading" empty-text="暂无符合条件的入库单">
+        <el-table-column prop="orderNo" label="入库单号" width="170"/><el-table-column prop="orderType" label="类型" width="110"><template #default="{row}">{{typeText[row.orderType]||row.orderType}}</template></el-table-column><el-table-column prop="supplierName" label="供应商" min-width="150"><template #default="{row}">{{row.supplierName||row.supplierId||'-'}}</template></el-table-column><el-table-column prop="totalQty" label="数量" width="90" align="right"/><el-table-column prop="status" label="状态" width="100" align="center"><template #default="{row}"><el-tag :type="statusInfo(row.status).type" size="small">{{statusInfo(row.status).text}}</el-tag></template></el-table-column><el-table-column prop="createdAt" label="创建时间" width="180"/><el-table-column label="操作" width="180" fixed="right"><template #default="{row}"><el-button type="primary" link @click="viewDetail(row)">查看</el-button><el-button v-if="['CREATED','RECEIVING'].includes(row.status)" type="primary" link @click="receive(row)">收货</el-button><el-button v-if="row.status==='RECEIVED'" type="success" link @click="putaway(row)">上架</el-button></template></el-table-column>
+      </el-table>
+      <el-pagination v-if="total>pageSize" v-model:current-page="page" :page-size="pageSize" :total="total" layout="total, prev, pager, next" class="pagination" @current-change="loadData"/>
+    </div>
+
+    <el-dialog v-model="dialogVisible" title="新建入库单" width="760px" destroy-on-close>
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="92px">
+        <div class="form-grid"><el-form-item label="入库类型" prop="orderType"><el-select v-model="form.orderType"><el-option v-for="(text,value) in typeText" :key="value" :label="text" :value="value"/></el-select></el-form-item><el-form-item label="入库仓库" prop="warehouseId"><el-select v-model="form.warehouseId" filterable><el-option v-for="item in warehouses" :key="item.id" :label="item.warehouseName" :value="item.id"/></el-select></el-form-item><el-form-item label="供应商" prop="supplierId"><el-select v-model="form.supplierId" filterable clearable><el-option v-for="item in suppliers" :key="item.id" :label="item.supplierName" :value="item.id"/></el-select></el-form-item><el-form-item label="预计到货" prop="expectedDate"><el-date-picker v-model="form.expectedDate" type="date" value-format="YYYY-MM-DD"/></el-form-item></div>
+        <div class="items-title"><span>商品明细</span><el-button type="primary" link @click="addItem"><el-icon><Plus/></el-icon>添加商品</el-button></div>
+        <div v-for="(item,index) in form.items" :key="item.key" class="item-row"><el-form-item :prop="`items.${index}.skuId`" :rules="[{required:true,message:'请选择SKU',trigger:'change'}]" label="SKU"><el-select v-model="item.skuId" filterable placeholder="请选择SKU"><el-option v-for="sku in skus" :key="sku.id" :label="`${sku.skuCode} · ${sku.productName||''} ${sku.specification||''}`" :value="sku.id"/></el-select></el-form-item><el-form-item :prop="`items.${index}.expectedQty`" :rules="[{required:true,message:'请输入数量',trigger:'blur'}]" label="数量"><el-input-number v-model="item.expectedQty" :min="1" :precision="0"/></el-form-item><el-button v-if="form.items.length>1" type="danger" link @click="form.items.splice(index,1)">删除</el-button></div>
+      </el-form>
+      <template #footer><el-button @click="dialogVisible=false">取消</el-button><el-button type="primary" :loading="submitting" @click="submit">创建入库单</el-button></template>
+    </el-dialog>
+  </div>
+</template>
+<script setup lang="ts">
+import { computed,onMounted,reactive,ref,watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage,ElMessageBox,type FormInstance,type FormRules } from 'element-plus'
+import { Plus } from '@element-plus/icons-vue'
+import { inboundApi,productReferenceApi,warehouseApi } from '@/api'
+const router=useRouter(),loading=ref(false),submitting=ref(false),dialogVisible=ref(false),tableData=ref<any[]>([]),allOrders=ref<any[]>([]),warehouses=ref<any[]>([]),suppliers=ref<any[]>([]),skus=ref<any[]>([]),activeTab=ref('all'),searchKeyword=ref(''),page=ref(1),pageSize=20,total=ref(0),formRef=ref<FormInstance>()
+const typeText:Record<string,string>={PURCHASE_IN:'采购入库',PRODUCTION_IN:'生产入库',RETURN_IN:'退货入库',OTHER_IN:'其他入库'}
+const form=reactive({orderType:'PURCHASE_IN',warehouseId:null as number|null,supplierId:null as number|null,expectedDate:'',items:[] as Array<{key:number;skuId:number|null;expectedQty:number}>})
+const rules:FormRules={orderType:[{required:true,message:'请选择入库类型',trigger:'change'}],warehouseId:[{required:true,message:'请选择仓库',trigger:'change'}],expectedDate:[{required:true,message:'请选择预计到货日期',trigger:'change'}]}
+const statusMap:Record<string,{text:string;type:''|'success'|'warning'|'info'|'danger'}>={CREATED:{text:'待收货',type:'info'},RECEIVING:{text:'收货中',type:'warning'},RECEIVED:{text:'待上架',type:''},PUTAWAY:{text:'已完成',type:'success'},COMPLETED:{text:'已完成',type:'success'},CANCELLED:{text:'已取消',type:'danger'}}
+const statusInfo=(status:string)=>statusMap[status]||{text:status,type:'info' as const}
+const metrics=computed(()=>[{label:'待收货',value:allOrders.value.filter(x=>['CREATED','RECEIVING'].includes(x.status)).length,color:'#2563EB'},{label:'待上架',value:allOrders.value.filter(x=>x.status==='RECEIVED').length,color:'#D97706'},{label:'已完成',value:allOrders.value.filter(x=>['PUTAWAY','COMPLETED'].includes(x.status)).length,color:'#16A34A'},{label:'总入库单',value:allOrders.value.length,color:'var(--text-primary)'}])
+async function loadData(){loading.value=true;try{const params={page:page.value,pageSize,keyword:searchKeyword.value||undefined,status:activeTab.value==='all'?undefined:activeTab.value};const[list,all]=await Promise.all([inboundApi.listInboundOrders(params),inboundApi.listInboundOrders({page:1,pageSize:1000})]);tableData.value=list.data?.records||[];total.value=list.data?.total||0;allOrders.value=all.data?.records||[]}finally{loading.value=false}}
+async function openCreate(){dialogVisible.value=true;form.orderType='PURCHASE_IN';form.warehouseId=null;form.supplierId=null;form.expectedDate='';form.items=[];addItem();try{const[w,s,k]=await Promise.all([warehouseApi.listWarehouses({page:1,pageSize:1000}),productReferenceApi.listSuppliers(),productReferenceApi.listSkus()]);warehouses.value=w.data?.records||w.data||[];suppliers.value=s.data||[];skus.value=k.data||[]}catch{dialogVisible.value=false}}
+let itemKey=0;const addItem=()=>form.items.push({key:++itemKey,skuId:null,expectedQty:1})
+async function submit(){if(!await formRef.value?.validate())return;const ids=form.items.map(x=>x.skuId);if(new Set(ids).size!==ids.length){ElMessage.warning('同一个SKU请合并为一行');return}submitting.value=true;try{await inboundApi.createInboundOrder({order:{orderType:form.orderType,warehouseId:form.warehouseId,supplierId:form.supplierId,expectedDate:form.expectedDate},items:form.items.map(({skuId,expectedQty})=>({skuId,expectedQty}))});ElMessage.success('入库单创建成功');dialogVisible.value=false;page.value=1;await loadData()}finally{submitting.value=false}}
+const viewDetail=(row:any)=>router.push(`/inbound/${row.id}`)
+async function run(row:any,action:()=>Promise<any>,text:string){await ElMessageBox.confirm(`确认对入库单 ${row.orderNo} 执行${text}？`,text,{type:'warning'});await action();ElMessage.success(`${text}成功`);await loadData()}
+const receive=(row:any)=>run(row,()=>inboundApi.receiveInboundOrder(row.id),'收货'),putaway=(row:any)=>run(row,()=>inboundApi.putawayInboundOrder(row.id),'上架')
+watch(activeTab,()=>{page.value=1;loadData()});onMounted(loadData)
+</script>
+<style scoped>.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}.pagination{justify-content:flex-end;margin-top:18px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}.form-grid :deep(.el-select),.form-grid :deep(.el-date-editor){width:100%}.items-title{display:flex;justify-content:space-between;align-items:center;font-weight:600;margin:10px 0}.item-row{display:grid;grid-template-columns:minmax(0,2fr) minmax(180px,1fr) 48px;gap:12px;align-items:start;padding:12px;background:var(--el-fill-color-lighter);border-radius:8px;margin-bottom:10px}.item-row :deep(.el-form-item){margin-bottom:0}.item-row :deep(.el-select){width:100%}@media(max-width:900px){.metrics-grid,.form-grid{grid-template-columns:1fr 1fr}.item-row{grid-template-columns:1fr}.detail-header{align-items:flex-start}}
+</style>

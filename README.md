@@ -17,6 +17,30 @@ SmartWMS 是一个现代化的企业级智能仓储管理系统，采用前后�
 - **数据驾驶舱**：实时监控仓库运营状态，多维度数据分析
 - **RBAC权限体系**：完善的用户、角色、权限管理
 
+## 项目预览
+
+> 以下界面使用演示数据展示，实际数据以部署环境为准。
+
+### 登录页面
+
+![SmartWMS 登录页面](docs/screenshots/login.png)
+
+### 仓储运营驾驶舱
+
+![SmartWMS 仓储运营驾驶舱](docs/screenshots/dashboard.png)
+
+### 库位状态地图
+
+![SmartWMS 库位状态地图](docs/screenshots/warehouse-map.png)
+
+### 库存中心
+
+![SmartWMS 库存中心](docs/screenshots/inventory.png)
+
+### 数据分析
+
+![SmartWMS 数据分析](docs/screenshots/analytics.png)
+
 ## 技术架构
 
 ### 前端技术栈

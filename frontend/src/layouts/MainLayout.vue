@@ -98,10 +98,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, reactive } from 'vue'
+import { ref, computed, onMounted, reactive, type Component } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { Bell, Fold, Expand } from '@element-plus/icons-vue'
+import {
+  Bell, Fold, Expand, Odometer, House, Goods, OfficeBuilding, Bottom, Top,
+  Box, Sort, Document, Setting, Tickets, List as ListIcon, Warning,
+  DataAnalysis, TrendCharts, ChatDotRound, Tools, User, Lock, Notebook,
+} from '@element-plus/icons-vue'
 import { notificationApi, userApi } from '@/api'
 import { ElMessage } from 'element-plus'
 
@@ -128,54 +132,54 @@ const currentRoute = computed(() => route)
 interface MenuItem {
   path: string
   title: string
-  icon: string
+  icon: Component
   permission?: string
   children?: MenuItem[]
 }
 
 const menuItems: MenuItem[] = [
-  { path: '/dashboard', title: '工作台', icon: 'Odometer', permission: 'dashboard' },
+  { path: '/dashboard', title: '工作台', icon: Odometer, permission: 'dashboard' },
   {
     path: '/warehouse-business',
     title: '仓储业务',
-    icon: 'House',
+    icon: House,
     children: [
-      { path: '/product', title: '商品中心', icon: 'Goods', permission: 'product:center' },
-      { path: '/warehouse', title: '仓库中心', icon: 'OfficeBuilding', permission: 'warehouse:center' },
-      { path: '/inbound', title: '入库管理', icon: 'Bottom', permission: 'inbound:management' },
-      { path: '/outbound', title: '出库管理', icon: 'Top', permission: 'outbound:management' },
-      { path: '/inventory', title: '库存中心', icon: 'Box', permission: 'inventory:center' },
-      { path: '/transfer', title: '调拨管理', icon: 'Sort', permission: 'transfer:management' },
-      { path: '/stocktake', title: '盘点管理', icon: 'Document', permission: 'stocktake:management' },
+      { path: '/product', title: '商品中心', icon: Goods, permission: 'product:center' },
+      { path: '/warehouse', title: '仓库中心', icon: OfficeBuilding, permission: 'warehouse:center' },
+      { path: '/inbound', title: '入库管理', icon: Bottom, permission: 'inbound:management' },
+      { path: '/outbound', title: '出库管理', icon: Top, permission: 'outbound:management' },
+      { path: '/inventory', title: '库存中心', icon: Box, permission: 'inventory:center' },
+      { path: '/transfer', title: '调拨管理', icon: Sort, permission: 'transfer:management' },
+      { path: '/stocktake', title: '盘点管理', icon: Document, permission: 'stocktake:management' },
     ]
   },
   {
     path: '/operation',
     title: '运营管理',
-    icon: 'Setting',
+    icon: Setting,
     children: [
-      { path: '/batch', title: '批次管理', icon: 'Tickets', permission: 'batch:management' },
-      { path: '/task', title: '任务中心', icon: 'List', permission: 'task:center' },
-      { path: '/alert', title: '预警中心', icon: 'Warning', permission: 'alert:center' },
+      { path: '/batch', title: '批次管理', icon: Tickets, permission: 'batch:management' },
+      { path: '/task', title: '任务中心', icon: ListIcon, permission: 'task:center' },
+      { path: '/alert', title: '预警中心', icon: Warning, permission: 'alert:center' },
     ]
   },
   {
     path: '/analysis',
     title: '智能分析',
-    icon: 'DataAnalysis',
+    icon: DataAnalysis,
     children: [
-      { path: '/analytics', title: '数据分析', icon: 'TrendCharts', permission: 'analytics' },
-      { path: '/ai', title: 'AI智能助手', icon: 'ChatDotRound', permission: 'ai:assistant' },
+      { path: '/analytics', title: '数据分析', icon: TrendCharts, permission: 'analytics' },
+      { path: '/ai', title: 'AI智能助手', icon: ChatDotRound, permission: 'ai:assistant' },
     ]
   },
   {
     path: '/system',
     title: '系统',
-    icon: 'Tools',
+    icon: Tools,
     children: [
-      { path: '/system/user', title: '用户管理', icon: 'User', permission: 'user:management' },
-      { path: '/system/role', title: '角色权限', icon: 'Lock', permission: 'role:permission' },
-      { path: '/system/log', title: '操作日志', icon: 'Notebook', permission: 'operation:log' },
+      { path: '/system/user', title: '用户管理', icon: User, permission: 'user:management' },
+      { path: '/system/role', title: '角色权限', icon: Lock, permission: 'role:permission' },
+      { path: '/system/log', title: '操作日志', icon: Notebook, permission: 'operation:log' },
     ]
   },
 ]

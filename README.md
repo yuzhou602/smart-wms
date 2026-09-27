@@ -1,5 +1,7 @@
 # SmartWMS - 智仓云智能仓储管理系统
 
+[![CI](https://github.com/yuzhou602/smart-wms/actions/workflows/ci.yml/badge.svg)](https://github.com/yuzhou602/smart-wms/actions/workflows/ci.yml)
+
 AI-Driven Intelligent Warehouse Management System
 
 ## 项目介绍
@@ -109,7 +111,7 @@ smart-wms/
 ### 环境要求
 
 - JDK 21+
-- Node.js 18+
+- Node.js 22+
 - MySQL 8.0+
 - Redis 7+
 

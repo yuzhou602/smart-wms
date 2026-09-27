@@ -144,6 +144,8 @@ cp .env.example .env
 docker-compose up -d
 ```
 
+AI 助手默认关闭。如需启用，请在 `.env` 中设置 `AI_CHAT_PROVIDER=openai`，并填写 `AI_API_KEY`、`AI_BASE_URL` 和 `AI_MODEL`。
+
 服务启动后：
 - 前端：http://localhost
 - 后端API：http://localhost:8080/api/v1

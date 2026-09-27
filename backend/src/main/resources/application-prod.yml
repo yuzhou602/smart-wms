@@ -1,4 +1,13 @@
 spring:
+  ai:
+    model:
+      audio:
+        speech: ${AI_AUDIO_SPEECH_PROVIDER:none}
+        transcription: ${AI_AUDIO_TRANSCRIPTION_PROVIDER:none}
+      chat: ${AI_CHAT_PROVIDER:none}
+      embedding: ${AI_EMBEDDING_PROVIDER:none}
+      image: ${AI_IMAGE_PROVIDER:none}
+      moderation: ${AI_MODERATION_PROVIDER:none}
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:smartwms}?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: ${DB_USERNAME:root}

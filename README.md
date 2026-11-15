@@ -106,12 +106,14 @@ smart-wms/
 └── docker-compose.yml         # Docker编排
 ```
 
+源码、构建缓存、展示截图和本地设计参考的归属见 [项目目录与维护边界](docs/PROJECT_LAYOUT.md)。
+
 ## 快速开始
 
 ### 环境要求
 
 - JDK 21+
-- Node.js 22+
+- Node.js 22.22.2+
 - MySQL 8.0+
 - Redis 7+
 
@@ -135,6 +137,20 @@ npm run dev
 ```
 
 前端服务启动在 http://localhost:3000
+
+#### 自动化测试
+
+```bash
+# 前端单元测试与覆盖率门禁
+cd frontend
+npm run test:coverage
+
+# 后端测试
+cd ../backend
+mvn test
+```
+
+前端 CI 会检查登录会话、权限指令和路由守卫。用户状态与权限指令要求 100% 覆盖，路由守卫重点要求分支覆盖率不低于 90%。
 
 ### Docker启动
 

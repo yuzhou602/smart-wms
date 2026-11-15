@@ -13,9 +13,9 @@
 
     <groupId>com.smartwms</groupId>
     <artifactId>smart-wms</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <name>SmartWMS</name>
-    <description>AI-Driven Intelligent Warehouse Management System</description>
+    <description>Intelligent Warehouse Management System</description>
 
     <properties>
         <java.version>21</java.version>
